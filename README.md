@@ -232,6 +232,27 @@ HAVING ISNULL(SUM(ss.total_submissions), 0) + ISNULL(SUM(ss.total_accepted_submi
 ORDER BY cnt.contest_id;
 ```
 2. 15 Days SQL \
-Not yet done
-
+The first part create a CTE that contains each submission day and the id and name of the hacker that make the maximum submission on that day. By using row number over partition of submission date and sort the data by number of submission in descending order, we can filter out rows that have rank = 1(i.e the hacker with the largest number of submissions). This CTE is then join with the one that queries number of hacker that submit everyday since the start date til the current date of submission. 
+This query will count the number of hackers that made at least one submission every day from the start date(2016/03/01) until the current date. 
+The final result is sorted by hacker id in ascending order(done when creating CTE max_submission).
+```
+DECLARE @start_date as VARCHAR(12)= '2016-03-01';
+WITH max_submission AS (
+SELECT t.submission_date, t.hacker_id, h.name FROM
+( SELECT submission_date, hacker_id, ROW_NUMBER() OVER
+(PARTITION BY submission_date ORDER BY COUNT(submission_id) DESC, hacker_id) as row_number
+FROM Submissions
+GROUP BY submission_date, hacker_id) t JOIN Hackers h ON t.hacker_id = h.hacker_id
+WHERE t.row_number = 1)
+SELECT max_submission.submission_date, 
+(SELECT COUNT(DISTINCT s1.hacker_id) as total_hackers FROM Submissions s1
+    WHERE s1.submission_date = max_submission.submission_date AND
+    (SELECT COUNT(DISTINCT(submission_date)) FROM Submissions s2
+                  WHERE s2.hacker_id = s1.hacker_id
+                  AND s2.submission_date < max_submission.submission_date
+                  ) = DATEDIFF(day, @start_date, max_submission.submission_date)
+) AS submit_every_day,
+max_submission.hacker_id, max_submission.name
+FROM max_submission
+```
 
