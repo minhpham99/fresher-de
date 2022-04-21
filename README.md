@@ -233,7 +233,7 @@ ORDER BY cnt.contest_id;
 ```
 2. 15 Days SQL \
 The first part create a CTE that contains each submission day and the id and name of the hacker that make the maximum submission on that day. By using row number over partition of submission date and sort the data by number of submission in descending order, we can filter out rows that have rank = 1(i.e the hacker with the largest number of submissions). This CTE is then join with the one that queries number of hacker that submit everyday since the start date til the current date of submission. 
-This query will count the number of hackers that made at least one submission every day from the start date(2016/03/01) until the current date. 
+This query will count the number of hackers that made at least one submission every day from the start date(2016/03/01) until the current date. It enforced this in the second AND condition where it count the number of submission date that contains the hacker id and ensure that it must be equal to the number of date in the range of the start date and the current date. If they are equal, that means this hacker has submit every day and therefore add to the count. 
 The final result is sorted by hacker id in ascending order(done when creating CTE max_submission).
 ```
 DECLARE @start_date as VARCHAR(12)= '2016-03-01';
